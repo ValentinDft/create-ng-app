@@ -1,0 +1,10 @@
+{
+  "name": "@valentindft/create-ng-app",
+  "version": "1.0.0",
+  "description": "Scaffold un nouveau projet Angular avec la config ESLint/Prettier/TS/Husky commune",
+  "license": "MIT",
+  "private": true,
+  "bin": {
+    "create-ng-app": "./bin/index.js"
+  }
+}
