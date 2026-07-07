@@ -52,7 +52,7 @@ run('git branch -M main');
 
 // 2. Outils de lint/format/git-hooks + la config partagée (GitHub Packages)
 run(
-  `npm install -D ${CONFIG_PKG}@${CONFIG_PKG_VERSION_RANGE} eslint @eslint/js typescript-eslint angular-eslint prettier husky lint-staged`,
+  `npm install -D ${CONFIG_PKG}@${CONFIG_PKG_VERSION_RANGE} eslint @eslint/js typescript-eslint angular-eslint prettier husky lint-staged stylelint stylelint-config-standard-scss`,
 );
 
 // 3. eslint.config.mjs — appelle la factory partagée avec le prefix du projet
@@ -83,6 +83,12 @@ fs.writeFileSync(
     `module.exports = require('${CONFIG_PKG}/lint-staged');\n`,
 );
 
+// 4ter. Stylelint
+fs.writeFileSync(
+  'stylelint.config.cjs',
+  `module.exports = require('${CONFIG_PKG}/stylelint');\n`,
+);
+
 // 5. tsconfig.json — étend la base partagée en plus de ce que ng new a généré
 const tsconfigPath = 'tsconfig.json';
 const tsconfig = readJsonC(tsconfigPath);
@@ -91,6 +97,12 @@ const existingExtends = tsconfig.extends
   : [];
 tsconfig.extends = [...existingExtends, `${CONFIG_PKG}/tsconfig/base.json`];
 fs.writeFileSync(tsconfigPath, JSON.stringify(tsconfig, null, 2) + '\n');
+
+// 5bis. Structure de dossiers Angular
+for (const dir of ['core', 'shared', 'features']) {
+  fs.mkdirSync(`src/app/${dir}`, { recursive: true });
+  fs.writeFileSync(`src/app/${dir}/.gitkeep`, '');
+}
 
 // 6. Husky
 run('npx husky init');
