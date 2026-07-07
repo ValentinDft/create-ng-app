@@ -52,8 +52,8 @@ run(
   `npm install -D ${CONFIG_PKG}@${CONFIG_PKG_VERSION_RANGE} eslint @eslint/js typescript-eslint angular-eslint prettier husky lint-staged`,
 );
 
-// 3. eslint.config.mjs -- appelle la factory partagée avec le prefix du projet
-// .mjs force ESM quel que soit le "type" du package.json (Angular 17+ = "type":"module")
+// 3. eslint.config.mjs — appelle la factory partagée avec le prefix du projet
+// .mjs force ESM quel que soit le "type" du package.json (Angular 17+ = "type" :"module")
 fs.writeFileSync(
   'eslint.config.mjs',
   `import buildConfig from '${CONFIG_PKG}/eslint';
@@ -66,13 +66,19 @@ export default buildConfig({ prefix: '${prefix}' });
 const pkgPath = 'package.json';
 const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
 pkg.prettier = `${CONFIG_PKG}/prettier`;
-pkg['lint-staged'] = `${CONFIG_PKG}/lint-staged`;
 pkg.scripts = {
   ...pkg.scripts,
   lint: 'eslint .',
   format: 'prettier --write .',
 };
 fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+
+// 4bis. Lint-staged dans un fichier dédié — package.json ne supporte que
+//       des objets en inline, pas des références de packages externes
+fs.writeFileSync(
+    'lint-staged.config.cjs',
+    `module.exports = require('${CONFIG_PKG}/lint-staged');\n`,
+);
 
 // 5. tsconfig.json — étend la base partagée en plus de ce que ng new a généré
 const tsconfigPath = 'tsconfig.json';
