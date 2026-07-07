@@ -47,6 +47,9 @@ run(`npx -y @angular/cli@latest new ${name} --style=scss --routing`);
 
 process.chdir(name);
 
+// Renomme la branche 'master' en 'main'
+run('git branch -M main');
+
 // 2. Outils de lint/format/git-hooks + la config partagée (GitHub Packages)
 run(
   `npm install -D ${CONFIG_PKG}@${CONFIG_PKG_VERSION_RANGE} eslint @eslint/js typescript-eslint angular-eslint prettier husky lint-staged`,
