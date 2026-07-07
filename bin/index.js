@@ -104,12 +104,48 @@ for (const dir of ['core', 'shared', 'features']) {
   fs.writeFileSync(`src/app/${dir}/.gitkeep`, '');
 }
 
-// 6. Husky
+// 6. .nvmrc — fixe la version Node pour nvm, Vercel et Netlify
+fs.writeFileSync('.nvmrc', '22\n');
+
+// 7. GitHub Actions CI — lint + tests sur chaque push/PR
+fs.mkdirSync('.github/workflows', { recursive: true });
+fs.writeFileSync(
+  '.github/workflows/ci.yml',
+  `name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test -- --watch=false --browsers=ChromeHeadless
+`,
+);
+
+// 8. Husky
 run('npx husky init');
 fs.writeFileSync('.husky/pre-commit', 'npx lint-staged\n');
 fs.writeFileSync('.husky/pre-push', 'npm test -- --watch=false --browsers=ChromeHeadless\n');
 
-// 7. Commit de la base
+// 9. Commit de la base
 run('git add -A');
 run('git commit -m "chore: scaffold via create-ng-app (eslint/prettier/ts/husky communs)"');
 
