@@ -95,6 +95,7 @@ fs.writeFileSync(tsconfigPath, JSON.stringify(tsconfig, null, 2) + '\n');
 // 6. Husky
 run('npx husky init');
 fs.writeFileSync('.husky/pre-commit', 'npx lint-staged\n');
+fs.writeFileSync('.husky/pre-push', 'npm test -- --watch=false --browsers=ChromeHeadless\n');
 
 // 7. Commit de la base
 run('git add -A');
