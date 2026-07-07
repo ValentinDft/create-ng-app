@@ -18,12 +18,18 @@ function parseArgs(argv) {
   const [name, ...rest] = argv;
   const opts = { prefix: null };
   for (const arg of rest) {
-    if (arg.startsWith('--prefix=')) opts.prefix = arg.split('=')[1];
+    if (arg.startsWith('--prefix=')) opts.prefix = arg.slice('--prefix='.length);
   }
   if (!opts.prefix) {
     opts.prefix = (name || 'app').replace(/[^a-zA-Z]/g, '').slice(0, 3).toLowerCase() || 'app';
   }
   return { name, ...opts };
+}
+
+function readJsonC(filePath) {
+  const raw = fs.readFileSync(filePath, 'utf8');
+  const stripped = raw.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
+  return JSON.parse(stripped);
 }
 
 const { name, prefix } = parseArgs(process.argv.slice(2));
@@ -46,13 +52,13 @@ run(
   `npm install -D ${CONFIG_PKG}@${CONFIG_PKG_VERSION_RANGE} eslint @eslint/js typescript-eslint angular-eslint prettier husky lint-staged`,
 );
 
-// 3. eslint.config.js -- appelle la factory partagée avec le prefix du projet
+// 3. eslint.config.mjs -- appelle la factory partagée avec le prefix du projet
+// .mjs force ESM quel que soit le "type" du package.json (Angular 17+ = "type":"module")
 fs.writeFileSync(
-  'eslint.config.js',
-  `// @ts-check
-const buildConfig = require('${CONFIG_PKG}/eslint');
+  'eslint.config.mjs',
+  `import buildConfig from '${CONFIG_PKG}/eslint';
 
-module.exports = buildConfig({ prefix: '${prefix}' });
+export default buildConfig({ prefix: '${prefix}' });
 `,
 );
 
@@ -70,7 +76,7 @@ fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
 
 // 5. tsconfig.json — étend la base partagée en plus de ce que ng new a généré
 const tsconfigPath = 'tsconfig.json';
-const tsconfig = JSON.parse(fs.readFileSync(tsconfigPath, 'utf8'));
+const tsconfig = readJsonC(tsconfigPath);
 const existingExtends = tsconfig.extends
   ? [].concat(tsconfig.extends)
   : [];
