@@ -72,6 +72,7 @@ pkg.prettier = `${CONFIG_PKG}/prettier`;
 pkg.scripts = {
   ...pkg.scripts,
   lint: 'eslint .',
+  'lint:styles': 'stylelint "**/*.{scss,css}"',
   format: 'prettier --write .',
 };
 fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
@@ -108,10 +109,12 @@ for (const dir of ['core', 'shared', 'features']) {
 fs.writeFileSync('.nvmrc', '22\n');
 
 // 7. GitHub Actions CI — lint + tests sur chaque push/PR
+const SCOPE = CONFIG_PKG.split('/')[0]; // '@valentindft'
+
 fs.mkdirSync('.github/workflows', { recursive: true });
 fs.writeFileSync(
-  '.github/workflows/ci.yml',
-  `name: CI
+    '.github/workflows/ci.yml',
+    `name: CI
 
 on:
   push:
@@ -122,21 +125,31 @@ on:
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
+          node-version: 22
+          registry-url: https://npm.pkg.github.com
+          scope: '${SCOPE}'
+          cache: npm
 
       - run: npm ci
+        env:
+          NODE_AUTH_TOKEN: \${{ secrets.GITHUB_TOKEN }}
 
       - name: Lint
         run: npm run lint
+        
+      - name: Lint styles
+        run: npm run lint:styles
 
       - name: Test
-        run: npm test -- --watch=false --browsers=ChromeHeadless
+        run: npm test -- --watch=false
 `,
 );
 
