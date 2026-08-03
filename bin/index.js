@@ -106,7 +106,7 @@ for (const dir of ['core', 'shared', 'features']) {
 }
 
 // 6. .nvmrc — fixe la version Node pour nvm, Vercel et Netlify
-fs.writeFileSync('.nvmrc', '22\n');
+fs.writeFileSync('.nvmrc', '24\n');
 
 // 7. GitHub Actions CI — lint + tests sur chaque push/PR
 const SCOPE = CONFIG_PKG.split('/')[0]; // '@valentindft'
@@ -129,11 +129,11 @@ jobs:
       contents: read
       packages: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
           registry-url: https://npm.pkg.github.com
           scope: '${SCOPE}'
           cache: npm
