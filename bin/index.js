@@ -4,8 +4,8 @@
 const { execSync } = require('node:child_process');
 const fs = require('node:fs');
 
-// (en minuscules). Le package est installé depuis GitHub Packages, donc
-// ~/.npmrc doit deja etre configure sur la machine (voir README de create-ng-app).
+// (en minuscules). Le package est public sur npmjs — aucune configuration
+// de registre ni de token n'est necessaire sur la machine.
 const CONFIG_PKG = '@valentindft/ng-base-config';
 const CONFIG_PKG_VERSION_RANGE = '^1.0.0';
 
@@ -50,7 +50,7 @@ process.chdir(name);
 // Renomme la branche 'master' en 'main'
 run('git branch -M main');
 
-// 2. Outils de lint/format/git-hooks + la config partagée (GitHub Packages)
+// 2. Outils de lint/format/git-hooks + la config partagée (npmjs, public)
 run(
   `npm install -D ${CONFIG_PKG}@${CONFIG_PKG_VERSION_RANGE} eslint @eslint/js typescript-eslint angular-eslint prettier husky lint-staged stylelint stylelint-config-standard-scss`,
 );
@@ -109,8 +109,6 @@ for (const dir of ['core', 'shared', 'features']) {
 fs.writeFileSync('.nvmrc', '24\n');
 
 // 7. GitHub Actions CI — lint + tests sur chaque push/PR
-const SCOPE = CONFIG_PKG.split('/')[0]; // '@valentindft'
-
 fs.mkdirSync('.github/workflows', { recursive: true });
 fs.writeFileSync(
     '.github/workflows/ci.yml',
@@ -127,20 +125,15 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: read
     steps:
       - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v7
         with:
           node-version: 24
-          registry-url: https://npm.pkg.github.com
-          scope: '${SCOPE}'
           cache: npm
 
       - run: npm ci
-        env:
-          NODE_AUTH_TOKEN: \${{ secrets.GITHUB_TOKEN }}
 
       - name: Lint
         run: npm run lint

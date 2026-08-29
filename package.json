@@ -1,9 +1,36 @@
 {
   "name": "@valentindft/create-ng-app",
-  "version": "1.0.0",
-  "description": "Scaffold un nouveau projet Angular avec la config ESLint/Prettier/TS/Husky commune",
+  "version": "1.0.1",
+  "description": "Scaffold un nouveau projet Angular avec la config ESLint/Prettier/TS/Stylelint/Husky commune",
   "license": "MIT",
-  "private": true,
+  "author": "Valentin Duffet",
+  "homepage": "https://github.com/ValentinDft/create-ng-app#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ValentinDft/create-ng-app.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ValentinDft/create-ng-app/issues"
+  },
+  "keywords": [
+    "angular",
+    "scaffold",
+    "cli",
+    "create-app",
+    "eslint",
+    "prettier",
+    "stylelint"
+  ],
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "bin"
+  ],
   "bin": {
     "create-ng-app": "./bin/index.js"
   }

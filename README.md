@@ -1,6 +1,10 @@
 # create-ng-app
 
-CLI personnel pour scaffolder un nouveau projet Angular avec la dernière version d'Angular CLI + toute la config qualité commune (`@valentindft/ng-base-config`) branchée d'emblée.
+CLI personnel pour scaffolder un nouveau projet Angular avec la dernière version d'Angular CLI + toute la config qualité commune ([`@valentindft/ng-base-config`](https://www.npmjs.com/package/@valentindft/ng-base-config)) branchée d'emblée.
+
+```bash
+npx @valentindft/create-ng-app <nom-app> --prefix=<xxx>
+```
 
 ---
 
@@ -16,7 +20,7 @@ Ce CLI est l'un des deux composants du toolkit perso :
 
 ```
 angular-base-toolkit/
-├── ng-base-config/     ← package npm privé — contient toute la config partagée
+├── ng-base-config/     ← package npm public — contient toute la config partagée
 └── create-ng-app/      ← CE CLI — orchestre ng new + branchement de ng-base-config
 ```
 
@@ -43,7 +47,7 @@ npx create-ng-app <nom> --prefix=<xxx>
         │
         ├─ 5bis. Crée src/app/core/ shared/ features/
         │
-        ├─ 6. Crée .nvmrc (Node 22)
+        ├─ 6. Crée .nvmrc (Node 24)
         │
         ├─ 7. Crée .github/workflows/ci.yml (lint + test sur push/PR)
         │
@@ -59,25 +63,24 @@ npx create-ng-app <nom> --prefix=<xxx>
 
 ### Node.js & Angular CLI
 
-Node.js 22 recommandé. Le CLI utilise `npx @angular/cli@latest` à la volée — pas besoin d'installer `@angular/cli` globalement.
+Node.js 24 recommandé. Le CLI utilise `npx @angular/cli@latest` à la volée — pas besoin d'installer `@angular/cli` globalement.
 
-### Accès à GitHub Packages (`ng-base-config` est un package privé)
+### Registre npm
 
-Configurer `~/.npmrc` une fois par machine :
-
-```
-@valentindft:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=<PAT avec scope read:packages>
-```
-
-Génère le PAT sur **GitHub → Settings → Developer settings → Personal access tokens** avec la permission `read:packages`.
+Rien à configurer. `create-ng-app` et `ng-base-config` sont tous les deux publics sur le registre npm par défaut : pas de `~/.npmrc`, pas de token, pas de `npm login`.
 
 ---
 
 ## Utilisation
 
 ```bash
-npx https://github.com/ValentinDft/create-ng-app <nom-app> --prefix=<prefix>
+npx @valentindft/create-ng-app <nom-app> --prefix=<prefix>
+```
+
+Équivalent via le raccourci `npm init` (npm résout `@scope/ng-app` vers `@scope/create-ng-app`) :
+
+```bash
+npm init @valentindft/ng-app <nom-app> -- --prefix=<prefix>
 ```
 
 ### Arguments
@@ -90,15 +93,17 @@ npx https://github.com/ValentinDft/create-ng-app <nom-app> --prefix=<prefix>
 ### Exemples
 
 ```bash
-npx https://github.com/ValentinDft/create-ng-app nextframe --prefix=ngf
-npx https://github.com/ValentinDft/create-ng-app mongarage --prefix=mgr
+npx @valentindft/create-ng-app nextframe --prefix=ngf
+npx @valentindft/create-ng-app mongarage --prefix=mgr
 ```
 
 ### Alias recommandé (`.zshrc` / `.bashrc`)
 
 ```bash
-alias create-ng-app='npx https://github.com/ValentinDft/create-ng-app'
+alias create-ng-app='npx @valentindft/create-ng-app@latest'
 ```
+
+Le suffixe `@latest` évite que `npx` réutilise indéfiniment une version mise en cache.
 
 Puis :
 
@@ -114,7 +119,7 @@ Après exécution, le projet a cette structure (en plus du scaffold Angular stan
 
 ```
 <nom-app>/
-├── .nvmrc                         ← Node 22 (lu par nvm, Vercel, Netlify, CI)
+├── .nvmrc                         ← Node 24 (lu par nvm, Vercel, Netlify)
 ├── .github/
 │   └── workflows/
 │       └── ci.yml                 ← lint + test sur chaque push/PR vers main
@@ -167,6 +172,8 @@ npm install -D @valentindft/ng-base-config@^1.0.0 \
   stylelint stylelint-config-standard-scss
 ```
 
+Tout provient du registre npm public — aucune authentification requise.
+
 ### 3. `eslint.config.mjs`
 Génère une flat config ESLint pointant vers la factory du package partagé avec le prefix du projet. Les règles type-aware (`no-floating-promises`, `await-thenable`) sont activées via `parserOptions.project: true`.
 
@@ -187,17 +194,21 @@ Ajoute `@valentindft/ng-base-config/tsconfig/base.json` dans le tableau `extends
 Crée `src/app/core/`, `src/app/shared/` et `src/app/features/` avec un `.gitkeep` chacun.
 
 ### 6. `.nvmrc`
-Fixe la version Node à `22`. Lu automatiquement par `nvm use`, Vercel, Netlify et le workflow CI.
+Fixe la version Node à `24`. Lu automatiquement par `nvm use`, Vercel et Netlify.
 
 ### 7. `.github/workflows/ci.yml`
 Pipeline GitHub Actions déclenché sur chaque push vers `main` et chaque PR :
 1. Checkout du code
-2. Setup Node 22 (via `.nvmrc`) + cache npm
+2. Setup Node 24 + cache npm
 3. `npm ci`
 4. `npm run lint`
-5. `npm test --watch=false --browsers=ChromeHeadless`
+5. `npm run lint:styles`
+6. `npm test -- --watch=false`
 
-Le CI est le filet de sécurité côté GitHub — il garantit que le code pushé est propre indépendamment de la machine locale. Gratuit sur les repos privés dans la limite de 2 000 min/mois (GitHub Free).
+`ng-base-config` étant public sur npm, le CI n'a besoin d'aucun registre ni token
+supplémentaire — `npm ci` résout tout depuis le registre npm par défaut.
+
+Le CI est le filet de sécurité côté GitHub — il garantit que le code pushé est propre indépendamment de la machine locale.
 
 ### 8. Husky
 `npx husky init` initialise Husky, puis :
@@ -209,3 +220,20 @@ Le CI est le filet de sécurité côté GitHub — il garantit que le code push�
 git add -A
 git commit -m "chore: scaffold via create-ng-app (eslint/prettier/ts/husky communs)"
 ```
+
+---
+
+## Publication
+
+Publié sur npm : [`@valentindft/create-ng-app`](https://www.npmjs.com/package/@valentindft/create-ng-app).
+
+Comme pour `ng-base-config`, la publication est automatique via GitHub Actions à chaque tag `v*.*.*` :
+
+```bash
+# 1. bumper "version" dans package.json
+git add -A && git commit -m "feat: ..."
+git tag v1.0.1
+git push && git push --tags
+```
+
+L'authentification passe par le **trusted publishing (OIDC)** de npm — aucun `NPM_TOKEN` n'est stocké dans le repo. Le workflow refuse de publier si le tag ne correspond pas à la `version` du `package.json`.

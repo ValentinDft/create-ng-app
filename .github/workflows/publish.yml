@@ -1,0 +1,40 @@
+name: Publish package
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Requis par le trusted publishing (OIDC) — c'est ce jeton d'identite
+      # qui remplace NPM_TOKEN et signe la provenance du package.
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      # Le trusted publishing necessite npm >= 11.5.1, plus recent que le npm
+      # embarque avec Node 24.
+      - run: npm install -g npm@latest
+
+      # Verifie que le tag pousse correspond bien a la version du package.json
+      - name: Check tag matches package version
+        run: |
+          PKG_VERSION="$(node -p "require('./package.json').version")"
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
+            echo "Tag $GITHUB_REF_NAME != version package.json $PKG_VERSION"
+            exit 1
+          fi
+
+      # Pas de NODE_AUTH_TOKEN : l'authentification passe par OIDC.
+      # La provenance est generee automatiquement.
+      - run: npm publish
